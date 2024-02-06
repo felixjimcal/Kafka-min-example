@@ -1,0 +1,16 @@
+docker pull confluentinc/cp-zookeeper
+docker pull confluentinc/cp-kafka
+docker network create kafka
+docker run -d --network=kafka --name=zookeeper -e ZOOKEEPER_CLIENT_PORT=2181 -e ZOOKEEPER_TICK_TIME=2000 -p 2181:2181 confluentinc/cp-zookeeper
+docker run -d --network=kafka --name=kafka -p 9092:9092 -e KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181 -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092 confluentinc/cp-kafka
+----------------------------------------------------
+  <ItemGroup>
+	  <PackageReference Include="Confluent.Kafka" Version="2.3.0" />
+	  <PackageReference Include="kafka-sharp" Version="1.4.3" />
+	  <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
+  </ItemGroup>
+----------------------------------------------------
+https://www.youtube.com/watch?v=n_IQq3pze0s&ab_channel=CodeOpinion
+----------------------------------------------------
+UI tool: https://www.conduktor.io/get-started/#desktop
+----------------------------------------------------
