@@ -1,10 +1,12 @@
 ﻿using Confluent.Kafka;
+using FakerDotNet;
 using Kafka.Public;
 using Kafka.Public.Loggers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Text;
+using System.Text.Json;
 
 public class Producer
 {
@@ -38,7 +40,9 @@ public class Producer
             _cluster.ConsumeFromLatest("demo");
             _cluster.MessageReceived += record =>
             {
-                _logger.LogInformation($"Consumer has received: {Encoding.UTF8.GetString(record.Value as byte[])}");
+                var myObject = JsonSerializer.Deserialize<User>(Encoding.UTF8.GetString(record.Value as byte[]));
+
+                _logger.LogInformation($"Consumer has received: {myObject.Number}");
             };
 
             return Task.CompletedTask;
@@ -72,11 +76,12 @@ public class Producer
         {
             for (var i = 0; i < 100; i++)
             {
-                var value = $"Hello from Propducer{i}";
+                var myObject = new User { Name = Faker.StarWars.Character(), Number = i };
+                string jsonMessage = JsonSerializer.Serialize(myObject);
 
-                _logger.LogInformation(value);
+                _logger.LogInformation(jsonMessage);
 
-                await _producer.ProduceAsync("demo", new Message<Null, string> { Value = value }, cancellationToken);
+                await _producer.ProduceAsync("demo", new Message<Null, string> { Value = jsonMessage }, cancellationToken);
             }
 
             _producer.Flush(TimeSpan.FromSeconds(10));
@@ -87,5 +92,11 @@ public class Producer
             _producer?.Dispose();
             return Task.CompletedTask;
         }
+    }
+
+    public class User
+    {
+        public string? Name { get; set; }
+        public int Number { get; set; }
     }
 }
