@@ -17,18 +17,21 @@ namespace Example
             CreateHostbuilder(args).Build().Run();
         }
 
-        private static IHostBuilder CreateHostbuilder(string[] args) => Host.CreateDefaultBuilder(args).ConfigureServices((context, collection) =>
-        {
-            collection.AddHostedService<KafkaCosnumerHostedService>();
-            collection.AddHostedService<KafkaProducerHostedService>();
-        });
+        private static IHostBuilder CreateHostbuilder(string[] args) =>
+            Host.CreateDefaultBuilder(args).ConfigureServices((context, collection) =>
+            {
+                collection.AddHostedService<KafkaCosnumerHostedService>();
+                collection.AddHostedService<KafkaProducerHostedService>();
+            });
 
         public class KafkaCosnumerHostedService : IHostedService
         {
+            private readonly ILogger<KafkaCosnumerHostedService> _logger;
             private ClusterClient _cluster;
 
-            public KafkaCosnumerHostedService()
+            public KafkaCosnumerHostedService(ILogger<KafkaCosnumerHostedService> logger)
             {
+                _logger = logger;
                 _cluster = new ClusterClient(new Configuration
                 {
                     Seeds = "localhost:9092"
@@ -45,11 +48,11 @@ namespace Example
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine(ex.Message);
+                        _logger.LogError(ex, "Error processing message");
                     }
                 };
 
-                // Suscribe a ambos topics una vez y procesa los mensajes en el manejador de eventos unificado
+                // Subscribing on topics
                 _cluster.ConsumeFromLatest(Topics.topicProducts);
                 _cluster.ConsumeFromLatest(Topics.topicCategories);
 
@@ -58,10 +61,23 @@ namespace Example
 
             private void ProcessMessage(dynamic record)
             {
-                User message = JsonSerializer.Deserialize<User>(Encoding.UTF8.GetString(record.Value as byte[]));
-
-                var processor = MessageProcessorFactory.GetProcessor(message.Topic);
-                processor.ProcessMessage(message);
+                try
+                {
+                    User message = JsonSerializer.Deserialize<User>(Encoding.UTF8.GetString(record.Value as byte[]));
+                    if (message != null)
+                    {
+                        var processor = MessageProcessorFactory.GetProcessor(message.Topic);
+                        processor.ProcessMessage(message);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Message deserialization returned null");
+                    }
+                }
+                catch (JsonException ex)
+                {
+                    _logger.LogError(ex, "Error deserializing message");
+                }
             }
 
             public Task StopAsync(CancellationToken cancellationToken)
@@ -73,18 +89,18 @@ namespace Example
 
         public class KafkaProducerHostedService : IHostedService
         {
+            private readonly ILogger<KafkaProducerHostedService> _logger;
             private IProducer<Null, string> _producer;
 
-            public KafkaProducerHostedService()
+            public KafkaProducerHostedService(ILogger<KafkaProducerHostedService> logger)
             {
-                var config = new ProducerConfig()
+                _logger = logger;
+                var config = new ProducerConfig
                 {
                     BootstrapServers = "localhost:9092"
                 };
                 _producer = new ProducerBuilder<Null, string>(config).Build();
             }
-
-            public ILogger<KafkaProducerHostedService> Logger { get; }
 
             public async Task StartAsync(CancellationToken cancellationToken)
             {
@@ -98,12 +114,12 @@ namespace Example
                     };
 
                     string jsonMessage = JsonSerializer.Serialize(myObject);
-                    Console.WriteLine("Producer sending: " + jsonMessage);
+                    _logger.LogInformation("Producer sending: {jsonMessage}", jsonMessage);
 
                     await _producer.ProduceAsync(myObject.Topic, new Message<Null, string> { Value = jsonMessage }, cancellationToken);
                 }
 
-                _producer.Flush(TimeSpan.FromSeconds(10));
+                _producer.Flush(cancellationToken);
             }
 
             public Task StopAsync(CancellationToken cancellationToken)
