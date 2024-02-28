@@ -53,8 +53,8 @@ namespace Example
                 };
 
                 // Subscribing on topics
-                _cluster.ConsumeFromLatest(Topics.topicProducts);
-                _cluster.ConsumeFromLatest(Topics.topicCategories);
+                _cluster.ConsumeFromLatest(Topics.topicSW);
+                _cluster.ConsumeFromLatest(Topics.topicDB);
 
                 return Task.CompletedTask;
             }
@@ -63,11 +63,12 @@ namespace Example
             {
                 try
                 {
-                    User message = JsonSerializer.Deserialize<User>(Encoding.UTF8.GetString(record.Value as byte[]));
-                    if (message != null)
+                    string jsonMessage = Encoding.UTF8.GetString(record.Value as byte[]);
+                    if (!string.IsNullOrWhiteSpace(jsonMessage))
                     {
-                        var processor = MessageProcessorFactory.GetProcessor(message.Topic);
-                        processor.ProcessMessage(message);
+                        string topic = record.Topic;
+                        var processor = MessageProcessorFactory.GetProcessor(topic);
+                        processor.ProcessMessage(jsonMessage);
                     }
                     else
                     {
@@ -106,17 +107,31 @@ namespace Example
             {
                 for (var i = 0; i < 100; i++)
                 {
-                    var myObject = new User
+                    dynamic message;
+                    if (i % 2 == 0)
                     {
-                        Id = i,
-                        Name = Faker.StarWars.Character(),
-                        Topic = i % 2 == 0 ? Topics.topicProducts : Topics.topicCategories
-                    };
+                        message = new SWCharacter
+                        {
+                            Id = i,
+                            Name = Faker.StarWars.Character(),
+                            Planet = Faker.StarWars.Planet(),
+                            Topic = Topics.topicSW
+                        };
+                    }
+                    else
+                    {
+                        message = new DBCharacter
+                        {
+                            Id = i,
+                            Name = Faker.DragonBall.Character(),
+                            Topic = Topics.topicDB
+                        };
+                    }
 
-                    string jsonMessage = JsonSerializer.Serialize(myObject);
+                    string jsonMessage = JsonSerializer.Serialize(message);
                     _logger.LogInformation("Producer sending: {jsonMessage}", jsonMessage);
 
-                    await _producer.ProduceAsync(myObject.Topic, new Message<Null, string> { Value = jsonMessage }, cancellationToken);
+                    await _producer.ProduceAsync(message.Topic, new Message<Null, string> { Value = jsonMessage }, cancellationToken);
                 }
 
                 _producer.Flush(cancellationToken);
@@ -131,22 +146,24 @@ namespace Example
 
         public interface ITypeMessageProcessor
         {
-            void ProcessMessage(User message);
+            void ProcessMessage(dynamic message);
         }
 
-        public class ProductMessageProcessor : ITypeMessageProcessor
+        public class StarWarsMessageProcessor : ITypeMessageProcessor
         {
-            public void ProcessMessage(User user)
+            public void ProcessMessage(dynamic message)
             {
-                Console.WriteLine($"Consuming mensaje de topic: {user.Topic}, {user.Name} con Id: {user.Id}");
+                var item = JsonSerializer.Deserialize<SWCharacter>(message);
+                Console.WriteLine($"Consuming mensaje de topic: {item.Topic}, {item.Name} con Id: {item.Id} del planeta {item.Planet}");
             }
         }
 
-        public class CategoryMessageProcessor : ITypeMessageProcessor
+        public class DragonBallMessageProcessor : ITypeMessageProcessor
         {
-            public void ProcessMessage(User user)
+            public void ProcessMessage(dynamic message)
             {
-                Console.WriteLine($"Consuming mensaje de topic: {user.Topic}, {user.Name} con Id: {user.Id}");
+                var item = JsonSerializer.Deserialize<DBCharacter>(message);
+                Console.WriteLine($"Consuming mensaje de topic: {item.Topic}, {item.Name} con Id: {item.Id}");
             }
         }
 
@@ -156,24 +173,32 @@ namespace Example
             {
                 return topic switch
                 {
-                    Topics.topicProducts => new ProductMessageProcessor(),
-                    Topics.topicCategories => new CategoryMessageProcessor(),
+                    Topics.topicSW => new StarWarsMessageProcessor(),
+                    Topics.topicDB => new DragonBallMessageProcessor(),
                     _ => throw new ArgumentException("No hay un procesador definido para este topic", topic),
                 };
             }
         }
 
-        public class User
+        public class SWCharacter
         {
-            public string? Name { get; set; }
+            public string? Planet { get; set; }
             public string? Topic { get; set; }
+            public string? Name { get; set; }
+            public int Id { get; set; }
+        }
+
+        public class DBCharacter
+        {
+            public string? Topic { get; set; }
+            public string? Name { get; set; }
             public int Id { get; set; }
         }
 
         public static class Topics
         {
-            public const string topicProducts = "Products";
-            public const string topicCategories = "Categories";
+            public const string topicSW = "StarWars";
+            public const string topicDB = "DragonBall";
         }
     }
 }
