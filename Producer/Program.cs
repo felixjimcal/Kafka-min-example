@@ -21,10 +21,11 @@ namespace Example
             Host.CreateDefaultBuilder(args).ConfigureServices((context, collection) =>
             {
                 // Adds hosted services for both consumer and producer
-                collection.AddHostedService<KafkaCosnumerHostedService>();
+                // collection.AddHostedService<KafkaCosnumerHostedService>();
                 collection.AddHostedService<KafkaProducerHostedService>();
             });
 
+        /*
         // Hosted service for consuming messages from Kafka
         public class KafkaCosnumerHostedService : IHostedService
         {
@@ -90,6 +91,7 @@ namespace Example
                 return Task.CompletedTask;
             }
         }
+        */
 
         // Hosted service for producing messages to Kafka
         public class KafkaProducerHostedService : IHostedService
@@ -150,6 +152,7 @@ namespace Example
             }
         }
 
+        /*
         public interface ITypeMessageProcessor
         {
             void ProcessMessage(dynamic message);
@@ -185,6 +188,7 @@ namespace Example
                 };
             }
         }
+        */
 
         public class SWCharacter
         {
