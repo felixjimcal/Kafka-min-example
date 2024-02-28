@@ -20,14 +20,16 @@ namespace Example
         private static IHostBuilder CreateHostbuilder(string[] args) =>
             Host.CreateDefaultBuilder(args).ConfigureServices((context, collection) =>
             {
+                // Adds hosted services for both consumer and producer
                 collection.AddHostedService<KafkaCosnumerHostedService>();
                 collection.AddHostedService<KafkaProducerHostedService>();
             });
 
+        // Hosted service for consuming messages from Kafka
         public class KafkaCosnumerHostedService : IHostedService
         {
             private readonly ILogger<KafkaCosnumerHostedService> _logger;
-            private ClusterClient _cluster;
+            private readonly ClusterClient _cluster;
 
             public KafkaCosnumerHostedService(ILogger<KafkaCosnumerHostedService> logger)
             {
@@ -63,11 +65,12 @@ namespace Example
             {
                 try
                 {
+                    // Deserialize the message from JSON
                     string jsonMessage = Encoding.UTF8.GetString(record.Value as byte[]);
                     if (!string.IsNullOrWhiteSpace(jsonMessage))
                     {
-                        string topic = record.Topic;
-                        var processor = MessageProcessorFactory.GetProcessor(topic);
+                        // Gets the appropriate processor based on the message topic
+                        var processor = MessageProcessorFactory.GetProcessor(record.Topic);
                         processor.ProcessMessage(jsonMessage);
                     }
                     else
@@ -88,6 +91,7 @@ namespace Example
             }
         }
 
+        // Hosted service for producing messages to Kafka
         public class KafkaProducerHostedService : IHostedService
         {
             private readonly ILogger<KafkaProducerHostedService> _logger;
@@ -108,7 +112,7 @@ namespace Example
                 for (var i = 0; i < 100; i++)
                 {
                     dynamic message;
-                    if (i % 2 == 0)
+                    if (i % 2 == 0) // Creates messages alternating between two fictional characters
                     {
                         message = new SWCharacter
                         {
@@ -128,12 +132,14 @@ namespace Example
                         };
                     }
 
+                    // Serializes the message to JSON and sends it to Kafka
                     string jsonMessage = JsonSerializer.Serialize(message);
                     _logger.LogInformation("Producer sending: {jsonMessage}", jsonMessage);
 
                     await _producer.ProduceAsync(message.Topic, new Message<Null, string> { Value = jsonMessage }, cancellationToken);
                 }
 
+                // Ensures all messages are sent before shutting down
                 _producer.Flush(cancellationToken);
             }
 
