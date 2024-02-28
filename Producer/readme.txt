@@ -6,7 +6,7 @@ docker run -d --network=kafka --name=zookeeper -e ZOOKEEPER_CLIENT_PORT=2181 -e 
 docker run -d --network=kafka --name=kafka -p 9092:9092 -e KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181 -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092 confluentinc/cp-kafka
 ----------------------------------------------------
 Build containers automatically:
-docker-compose up --build
+docker-compose up --build -d
 ----------------------------------------------------
 <ItemGroup>
 	  <PackageReference Include="Confluent.Kafka" Version="2.3.0" />
