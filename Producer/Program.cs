@@ -25,12 +25,10 @@ namespace Example
 
         public class KafkaCosnumerHostedService : IHostedService
         {
-            private readonly ILogger<KafkaCosnumerHostedService> _logger;
             private ClusterClient _cluster;
 
-            public KafkaCosnumerHostedService(ILogger<KafkaCosnumerHostedService> logger)
+            public KafkaCosnumerHostedService()
             {
-                _logger = logger;
                 _cluster = new ClusterClient(new Configuration
                 {
                     Seeds = "localhost:9092"
@@ -39,23 +37,31 @@ namespace Example
 
             public Task StartAsync(CancellationToken cancellationToken)
             {
+                _cluster.MessageReceived += (record) =>
+                {
+                    try
+                    {
+                        ProcessMessage(record);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                    }
+                };
+
+                // Suscribe a ambos topics una vez y procesa los mensajes en el manejador de eventos unificado
                 _cluster.ConsumeFromLatest(Topics.topicProducts);
-                _cluster.MessageReceived += record =>
-                {
-                    var myObject = JsonSerializer.Deserialize<User>(Encoding.UTF8.GetString(record.Value as byte[]));
-
-                    _logger.LogInformation($"Consumer {myObject.Topic} has received: {myObject.Name} with id: {myObject.Id}");
-                };
-
                 _cluster.ConsumeFromLatest(Topics.topicCategories);
-                _cluster.MessageReceived += record =>
-                {
-                    var myObject = JsonSerializer.Deserialize<User>(Encoding.UTF8.GetString(record.Value as byte[]));
-
-                    _logger.LogInformation($"Consumer {myObject.Topic} has received: {myObject.Name} with id: {myObject.Id}");
-                };
 
                 return Task.CompletedTask;
+            }
+
+            private void ProcessMessage(dynamic record)
+            {
+                User message = JsonSerializer.Deserialize<User>(Encoding.UTF8.GetString(record.Value as byte[]));
+
+                var processor = MessageProcessorFactory.GetProcessor(message.Topic);
+                processor.ProcessMessage(message);
             }
 
             public Task StopAsync(CancellationToken cancellationToken)
@@ -67,12 +73,10 @@ namespace Example
 
         public class KafkaProducerHostedService : IHostedService
         {
-            private readonly ILogger<KafkaProducerHostedService> _logger;
             private IProducer<Null, string> _producer;
 
-            public KafkaProducerHostedService(ILogger<KafkaProducerHostedService> logger)
+            public KafkaProducerHostedService()
             {
-                _logger = logger;
                 var config = new ProducerConfig()
                 {
                     BootstrapServers = "localhost:9092"
@@ -94,7 +98,7 @@ namespace Example
                     };
 
                     string jsonMessage = JsonSerializer.Serialize(myObject);
-                    _logger.LogInformation("Producer sending: " + jsonMessage);
+                    Console.WriteLine("Producer sending: " + jsonMessage);
 
                     await _producer.ProduceAsync(myObject.Topic, new Message<Null, string> { Value = jsonMessage }, cancellationToken);
                 }
@@ -106,6 +110,40 @@ namespace Example
             {
                 _producer?.Dispose();
                 return Task.CompletedTask;
+            }
+        }
+
+        public interface ITypeMessageProcessor
+        {
+            void ProcessMessage(User message);
+        }
+
+        public class ProductMessageProcessor : ITypeMessageProcessor
+        {
+            public void ProcessMessage(User user)
+            {
+                Console.WriteLine($"Consuming mensaje de topic: {user.Topic}, {user.Name} con Id: {user.Id}");
+            }
+        }
+
+        public class CategoryMessageProcessor : ITypeMessageProcessor
+        {
+            public void ProcessMessage(User user)
+            {
+                Console.WriteLine($"Consuming mensaje de topic: {user.Topic}, {user.Name} con Id: {user.Id}");
+            }
+        }
+
+        public class MessageProcessorFactory
+        {
+            public static ITypeMessageProcessor GetProcessor(string topic)
+            {
+                return topic switch
+                {
+                    Topics.topicProducts => new ProductMessageProcessor(),
+                    Topics.topicCategories => new CategoryMessageProcessor(),
+                    _ => throw new ArgumentException("No hay un procesador definido para este topic", topic),
+                };
             }
         }
 
