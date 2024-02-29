@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Example", "Producer\Example
 EndProject
 Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{4EF1FB6B-31FD-425A-8435-DDC685715595}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KafkaTriggerExample", "AzFunctions\KafkaTriggerExample\KafkaTriggerExample.csproj", "{4DC9BA02-9FDB-49EC-90DF-4FF08B3DFC68}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FunctionApp1", "AzFunctions\FunctionApp1\FunctionApp1.csproj", "{C68E487D-30C8-4593-AE4E-60F8FEC425A8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,10 +23,10 @@ Global
 		{4EF1FB6B-31FD-425A-8435-DDC685715595}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4EF1FB6B-31FD-425A-8435-DDC685715595}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4EF1FB6B-31FD-425A-8435-DDC685715595}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4DC9BA02-9FDB-49EC-90DF-4FF08B3DFC68}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4DC9BA02-9FDB-49EC-90DF-4FF08B3DFC68}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4DC9BA02-9FDB-49EC-90DF-4FF08B3DFC68}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4DC9BA02-9FDB-49EC-90DF-4FF08B3DFC68}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C68E487D-30C8-4593-AE4E-60F8FEC425A8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C68E487D-30C8-4593-AE4E-60F8FEC425A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C68E487D-30C8-4593-AE4E-60F8FEC425A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C68E487D-30C8-4593-AE4E-60F8FEC425A8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

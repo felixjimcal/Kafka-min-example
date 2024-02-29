@@ -1,8 +1,8 @@
 {
   "profiles": {
-    "KafkaTriggerExample": {
+    "FunctionApp1": {
       "commandName": "Project",
-      "commandLineArgs": "--port 7256",
+      "commandLineArgs": "--port 7164",
       "launchBrowser": false
     }
   }
