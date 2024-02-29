@@ -2,15 +2,15 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Kafka;
 using Microsoft.Extensions.Logging;
 
-namespace FunctionApp1
+namespace AzureFunctionDragonball
 {
-    public class Function1
+    public class FunctionDragonball
     {
-        [FunctionName(nameof(ConsoleConsumer))]
+        [FunctionName("FunctionDragonball")]
         public void ConsoleConsumer(
         [KafkaTrigger(
             "localhost:9092",
-            "StarWars",
+            "DragonBall",
             ConsumerGroup = "$Default",
             AuthenticationMode = BrokerAuthenticationMode.Plain)] KafkaEventData<string>[] kafkaEvents,
             ILogger logger)
