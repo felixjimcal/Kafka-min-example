@@ -1,9 +1,0 @@
-{
-  "profiles": {
-    "AFDragonball": {
-      "commandName": "Project",
-      "commandLineArgs": "--port 7113",
-      "launchBrowser": false
-    }
-  }
-}
