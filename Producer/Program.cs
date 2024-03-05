@@ -25,6 +25,7 @@ namespace Example
                 collection.AddHostedService<KafkaProducerHostedService>();
             });
 
+        /*
         // Hosted service for consuming messages from Kafka
         public class KafkaCosnumerHostedService : IHostedService
         {
@@ -90,6 +91,7 @@ namespace Example
                 return Task.CompletedTask;
             }
         }
+        */
 
         // Hosted service for producing messages to Kafka
         public class KafkaProducerHostedService : IHostedService
