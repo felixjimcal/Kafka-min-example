@@ -9,7 +9,7 @@ namespace AzureFunctionStarWars
         [FunctionName("FunctionStarWars")]
         public void ConsoleConsumer(
         [KafkaTrigger(
-            "localhost:9092",
+            "kafka:9092",
             "StarWars",
             ConsumerGroup = "$Default",
             AuthenticationMode = BrokerAuthenticationMode.Plain)] KafkaEventData<string>[] kafkaEvents,

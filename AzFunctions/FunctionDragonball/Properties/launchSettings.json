@@ -2,8 +2,13 @@
   "profiles": {
     "FunctionDragonball": {
       "commandName": "Project",
-      "commandLineArgs": "--port 7240",
-      "launchBrowser": false
+      "commandLineArgs": "--port 7240"
+    },
+    "Container (Dockerfile)": {
+      "commandName": "Docker",
+      "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}",
+      "httpPort": 32107,
+      "useSSL": false
     }
   }
 }

@@ -29,8 +29,28 @@ services:
   example:
     image: ${DOCKER_REGISTRY-}example
     build:
-      context: .
-      dockerfile: Producer/Dockerfile
+      context: ./Producer
+      dockerfile: Dockerfile
+    depends_on:
+      - kafka
+    networks:
+      - kafka_net
+
+  azurefunctiondragonball:
+    image: ${DOCKER_REGISTRY-}azurefunctiondragonball
+    build:
+      context: ./AzFunctions/FunctionDragonball
+      dockerfile: Dockerfile
+    depends_on:
+      - kafka
+    networks:
+      - kafka_net
+
+  azurefunctionstarwars:
+    image: ${DOCKER_REGISTRY-}azurefunctionstarwars
+    build:
+      context: ./AzFunctions/FunctionApp1
+      dockerfile: Dockerfile
     depends_on:
       - kafka
     networks:
@@ -38,3 +58,5 @@ services:
 
 networks:
   kafka_net:
+
+

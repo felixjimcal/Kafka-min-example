@@ -1,1 +1,10 @@
 version: '3.4'
+
+services:
+  azurefunctiondragonball:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+
+  azurefunctionstarwars:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
