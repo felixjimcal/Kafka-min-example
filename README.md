@@ -1,5 +1,3 @@
-Here's the explanation of the commands you've provided, translated into English, with comments added for clarity on setting up and running a basic Kafka environment using Docker:
-
 ### 1. Download Docker Images for Confluent's Zookeeper and Kafka
 
 ```bash
